@@ -10,7 +10,6 @@
     --bg: #f5f6fa;
     --white: #ffffff;
     --border: #e2e6ef;
-    --border2: #d0d5e8;
     --accent: #2563eb;
     --accent-light: #eff4ff;
     --text: #1e2533;
@@ -22,12 +21,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  header {
-    background: var(--white); border-bottom: 1px solid var(--border);
-    padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
-    height: 58px; position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-  }
+  header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 58px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
   .logo { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
   .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
   .logo span { color: var(--text3); font-weight: 500; }
@@ -39,12 +33,7 @@
 
   .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
 
-  .hero {
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-    border-radius: 14px; padding: 28px 32px; margin-bottom: 28px;
-    display: flex; align-items: center; justify-content: space-between; gap: 20px;
-    color: #fff; box-shadow: 0 4px 20px rgba(37,99,235,0.25);
-  }
+  .hero { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-radius: 14px; padding: 28px 32px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: #fff; box-shadow: 0 4px 20px rgba(37,99,235,0.25); }
   .hero-text h1 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
   .hero-text p { font-size: 13px; opacity: .8; }
   .hero-stats { display: flex; gap: 28px; }
@@ -54,7 +43,7 @@
 
   .status-box { text-align: center; padding: 56px; border-radius: 12px; background: var(--white); border: 1px solid var(--border); }
   .status-icon { font-size: 40px; margin-bottom: 12px; }
-  .status-box p { font-size: 14px; color: var(--text2); }
+  .status-box p { font-size: 14px; color: var(--text2); margin-bottom: 16px; }
   .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -70,8 +59,7 @@
   .cat-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--white); color: var(--text2); transition: all .15s; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap; box-shadow: var(--shadow); }
-  .refresh-btn:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
-  .refresh-btn svg { transition: transform .3s; }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
   .refresh-btn.spinning svg { animation: spin .8s linear infinite; }
 
   .sheet-banner { background: #eff4ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 13px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
@@ -166,7 +154,7 @@
   <div id="portal-content">
     <div class="status-box">
       <div class="spinner"></div>
-      <p id="loading-msg">Google Sheets에서 데이터를 불러오는 중...</p>
+      <p>Google Sheets에서 데이터를 불러오는 중...</p>
     </div>
   </div>
 </div>
@@ -174,17 +162,14 @@
 <div id="toast"></div>
 
 <script>
-// ── Google Apps Script URL ────────────────────
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw4B0cFDVmKn9v5jxSOkbq8ZOU_whSosU1khTkZ1PfmYTLb-euX46HVsp4UwIu8aPP1/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxYhXuIOp0veEWpmy28fQ1ma_C4kA0sVbfAnzbNn7e_WLjCMUR1VVzovBXIuFnFAQHE/exec';
 
-// ── 색상 팔레트 ───────────────────────────────
 const COLORS = ['#2563eb','#16a34a','#7c3aed','#ea580c','#dc2626','#0891b2','#d97706','#be185d','#0d9488','#4f46e5'];
 const LIGHT  = {'#2563eb':'#eff4ff','#16a34a':'#f0fdf4','#7c3aed':'#f5f3ff','#ea580c':'#fff7ed','#dc2626':'#fef2f2','#0891b2':'#ecfeff','#d97706':'#fffbeb','#be185d':'#fdf2f8','#0d9488':'#f0fdfa','#4f46e5':'#eef2ff'};
 const ICONS  = {'수출':'🚢','export':'🚢','수입':'📦','import':'📦','웹앱':'🌐','web apps':'🌐','webapp':'🌐','인사':'👥','hr':'👥','총무':'👥','일반':'📁','general':'📁','재무':'💰','finance':'💰','생산':'🏭','production':'🏭','영업':'📈','sales':'📈'};
 const lightOf = c => LIGHT[c]||'#f5f6fa';
 const catIcon = c => ICONS[c.toLowerCase()]||'📂';
 
-// ── 다국어 ────────────────────────────────────
 const LANG = {
   ko:{
     heroTitle:'JNFAM 팀 포털',
@@ -192,8 +177,6 @@ const LANG = {
     statLinks:'전체 링크', statCats:'카테고리',
     searchPh:'파일명, 앱 이름으로 검색...',
     filterAll:'전체', updLbl:'업데이트', refresh:'새로고침',
-    loading:'Google Sheets에서 데이터를 불러오는 중...',
-    loadErr:'데이터를 불러오지 못했어요. 🔄 새로고침을 눌러주세요.',
     emptyQ: q=>`"${q}" 검색 결과가 없습니다`,
     emptyAll:'Google Sheets에 데이터를 추가해 주세요.',
     toastOk:'✅ 최신 데이터로 업데이트됐어요',
@@ -206,13 +189,11 @@ const LANG = {
     statLinks:'Total Links', statCats:'Categories',
     searchPh:'Search by file or app name...',
     filterAll:'All', updLbl:'Updated', refresh:'Refresh',
-    loading:'Loading data from Google Sheets...',
-    loadErr:'Failed to load data. Please click 🔄 Refresh.',
     emptyQ: q=>`No results for "${q}"`,
     emptyAll:'Please add data to Google Sheets.',
     toastOk:'✅ Data refreshed successfully',
     toastErr:'❌ Load failed. Please try again.',
-    banner:'Links are managed via <strong>Google Sheets</strong>. After adding or editing rows in the sheet, click 🔄 Refresh.',
+    banner:'Links are managed via <strong>Google Sheets</strong>. After adding or editing rows, click 🔄 Refresh.',
   }
 };
 
@@ -247,15 +228,13 @@ function updateLastUpdated(){
   }
 }
 
-// ── 데이터 로드 ───────────────────────────────
 async function loadData(manual=false){
   const btn=document.getElementById('refresh-btn');
   btn.classList.add('spinning');
   document.getElementById('refresh-label').textContent='...';
 
-  // 캐시 먼저 표시
   const cached=localStorage.getItem('jnfam_data');
-  if(cached && !manual){
+  if(cached&&!manual){
     try{ processData(JSON.parse(cached)); }catch(e){}
   }
 
@@ -274,7 +253,8 @@ async function loadData(manual=false){
       document.getElementById('portal-content').innerHTML=`
         <div class="status-box">
           <div class="status-icon">⚠️</div>
-          <p>${T('loadErr')}</p>
+          <p>데이터를 불러오지 못했어요. 🔄 새로고침을 눌러주세요.</p>
+          <button class="refresh-btn" style="margin:0 auto" onclick="loadData(true)">🔄 다시 시도</button>
         </div>`;
     }
   }
@@ -285,16 +265,14 @@ async function loadData(manual=false){
 }
 
 function processData(data){
-  // 카테고리 순서 유지하며 색상 배정
   const seen=new Set();
-  data.forEach(r=>{ if(r.category&&!seen.has(r.category)){ seen.add(r.category); } });
+  data.forEach(r=>{ if(r.category) seen.add(r.category); });
   categories=[...seen];
   categories.forEach((c,i)=>{ if(!colorMap[c]) colorMap[c]=COLORS[i%COLORS.length]; });
   allLinks=data.filter(r=>(r.nameKo||r.nameEn||r.name)&&r.url);
   renderPortal();
 }
 
-// ── 렌더링 ────────────────────────────────────
 function getName(l){ return (lang==='ko'?(l.nameKo||l.name):(l.nameEn||l.nameKo||l.name))||''; }
 function getDesc(l){ return (lang==='ko'?(l.descKo||l.desc):(l.descEn||l.descKo||l.desc))||''; }
 
@@ -303,7 +281,6 @@ function renderPortal(){
   document.getElementById('stat-total').textContent=allLinks.length||'-';
   document.getElementById('stat-cats').textContent=categories.length||'-';
 
-  // 탭
   const tabs=document.getElementById('cat-tabs');
   tabs.innerHTML=`<button class="cat-tab ${activeFilter==='all'?'active':''}" onclick="setFilter('all')">${T('filterAll')} ${allLinks.length}</button>`;
   categories.forEach(cat=>{
@@ -313,7 +290,6 @@ function renderPortal(){
     tabs.innerHTML+=`<button class="cat-tab ${on?'active':''}" style="${on?`background:${c};border-color:${c};color:#fff`:''}" onclick="setFilter('${cat}')">${catIcon(cat)} ${cat} ${n}</button>`;
   });
 
-  // 카드
   const show=activeFilter==='all'?categories:[activeFilter];
   let html='',hasAny=false;
   show.forEach(cat=>{
@@ -329,14 +305,13 @@ function renderPortal(){
       </div>
       <div class="cards">`;
     links.forEach(l=>{
-      const bg=lightOf(c);
       html+=`<a class="card" href="${l.url}" target="_blank" rel="noopener">
         <div class="card-top-bar" style="background:${c}"></div>
         <div class="card-icon">${l.icon||'📄'}</div>
         <div class="card-name">${getName(l)}</div>
         ${getDesc(l)?`<div class="card-desc">${getDesc(l)}</div>`:''}
         <div class="card-footer">
-          <span class="card-type" style="background:${bg};color:${c}">${l.type||cat}</span>
+          <span class="card-type" style="background:${lightOf(c)};color:${c}">${l.type||cat}</span>
           <span class="card-arrow" style="color:${c}">→</span>
         </div>
       </a>`;
@@ -344,7 +319,7 @@ function renderPortal(){
     html+=`</div></div>`;
   });
 
-  if(!hasAny && allLinks.length>0)
+  if(!hasAny&&allLinks.length>0)
     html=`<div class="empty"><div class="empty-icon">🔍</div><p>${T('emptyQ',q)}</p></div>`;
   else if(!hasAny)
     html=`<div class="empty"><div class="empty-icon">📋</div><p>${T('emptyAll')}</p></div>`;
@@ -364,7 +339,6 @@ function toast(msg){
   setTimeout(()=>el.classList.remove('show'),2800);
 }
 
-// ── 시작 ──────────────────────────────────────
 document.getElementById('btn-ko').classList.toggle('active',lang==='ko');
 document.getElementById('btn-en').classList.toggle('active',lang==='en');
 applyLang();
