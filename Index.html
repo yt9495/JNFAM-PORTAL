@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JNFAM Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --white: #ffffff;
+    --border: #e2e6ef;
+    --border2: #d0d5e8;
+    --accent: #2563eb;
+    --accent-light: #eff4ff;
+    --accent2: #16a34a;
+    --accent2-light: #f0fdf4;
+    --accent3: #dc2626;
+    --accent3-light: #fef2f2;
+    --accent4: #7c3aed;
+    --accent4-light: #f5f3ff;
+    --accent5: #ea580c;
+    --accent5-light: #fff7ed;
+    --text: #1e2533;
+    --text2: #5a6478;
+    --text3: #9aa3b5;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.10), 0 8px 28px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── 헤더 ── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 58px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px; font-weight: 600; color: var(--accent);
+    letter-spacing: .04em; display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .logo span { color: var(--text3); font-weight: 500; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  /* 언어 토글 */
+  .lang-toggle {
+    display: flex; align-items: center;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px; gap: 2px;
+  }
+  .lang-btn {
+    padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: none; background: transparent; color: var(--text3);
+    transition: all .15s; font-family: 'IBM Plex Mono', monospace;
+  }
+  .lang-btn.active { background: var(--accent); color: #fff; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 15px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--white); color: var(--text2); transition: all .15s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn:hover { background: var(--bg); border-color: var(--border2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #1d4ed8; }
+  .btn.success { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .btn.success:hover { background: #15803d; }
+  .btn.danger { background: transparent; border-color: #fca5a5; color: var(--accent3); }
+  .btn.danger:hover { background: var(--accent3-light); }
+
+  /* ── 레이아웃 ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  /* ── 히어로 ── */
+  .hero {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    border-radius: 14px; padding: 28px 32px; margin-bottom: 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    color: #fff; box-shadow: 0 4px 20px rgba(37,99,235,0.25);
+  }
+  .hero-text h1 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+  .hero-text p { font-size: 13px; opacity: .8; }
+  .hero-stats { display: flex; gap: 28px; }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 600; }
+  .stat-label { font-size: 11px; opacity: .7; margin-top: 2px; }
+
+  /* ── 검색 ── */
+  .search-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 11px 16px; margin-bottom: 24px;
+    transition: border-color .15s; box-shadow: var(--shadow);
+  }
+  .search-bar:focus-within { border-color: var(--accent); }
+  .search-bar input { background: none; border: none; outline: none; color: var(--text); font-size: 14px; flex: 1; font-family: 'Noto Sans KR', sans-serif; }
+  .search-bar input::placeholder { color: var(--text3); }
+
+  /* ── 카테고리 탭 ── */
+  .cat-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .cat-tab {
+    padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--white); color: var(--text2); transition: all .15s;
+    font-family: 'Noto Sans KR', sans-serif; box-shadow: var(--shadow);
+  }
+  .cat-tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .cat-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── 섹션 ── */
+  .section { margin-bottom: 32px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1.5px solid var(--border); }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--text); }
+  .section-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .section-count { font-size: 11px; color: var(--text3); background: var(--bg); border: 1px solid var(--border); padding: 2px 10px; border-radius: 10px; font-weight: 600; }
+
+  /* ── 카드 ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 18px; cursor: pointer; transition: all .18s;
+    text-decoration: none; display: block; position: relative; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; opacity: 0; transition: opacity .15s; }
+  .card:hover { border-color: var(--hover-color, var(--accent)); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .card:hover .card-top-bar { opacity: 1; }
+  .card-icon { font-size: 28px; margin-bottom: 10px; }
+  .card-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+  .card-desc { font-size: 11px; color: var(--text2); line-height: 1.55; margin-bottom: 12px; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-type { font-size: 10px; font-family: 'IBM Plex Mono', monospace; padding: 3px 9px; border-radius: 5px; font-weight: 600; }
+  .card-arrow { color: var(--text3); font-size: 14px; transition: transform .15s; }
+  .card:hover .card-arrow { transform: translateX(3px); }
+
+  /* ── 빈 상태 ── */
+  .empty { text-align: center; padding: 56px; color: var(--text3); border: 2px dashed var(--border); border-radius: 12px; background: var(--white); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* ── 오버레이 ── */
+  #admin-panel {
+    display: none; position: fixed; inset: 0;
+    background: rgba(30,37,51,.45); z-index: 1000;
+    backdrop-filter: blur(3px);
+    align-items: flex-start; justify-content: center;
+    padding: 24px; overflow-y: auto;
+  }
+  #admin-panel.open { display: flex; }
+  .admin-modal {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 16px; width: 100%; max-width: 820px; padding: 30px;
+    margin: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.14);
+  }
+  .admin-modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+  .admin-modal .sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+  .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg); border-radius: 10px; padding: 4px; }
+  .admin-tab {
+    flex: 1; text-align: center; padding: 9px; border-radius: 7px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    border: none; background: transparent; color: var(--text3);
+    font-family: 'Noto Sans KR', sans-serif; transition: all .15s;
+  }
+  .admin-tab.active { background: var(--white); color: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.09); }
+
+  .admin-section { display: none; }
+  .admin-section.active { display: block; }
+
+  /* 링크 목록 */
+  .link-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 320px; overflow-y: auto; }
+  .link-row { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .link-row-icon { font-size: 20px; flex-shrink: 0; }
+  .link-row-info { flex: 1; min-width: 0; }
+  .link-row-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .link-row-url { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'IBM Plex Mono', monospace; }
+  .link-row-cat { font-size: 10px; padding: 3px 9px; border-radius: 5px; margin-left: auto; flex-shrink: 0; font-weight: 600; }
+  .link-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border); background: var(--white); color: var(--text2); font-size: 14px; transition: all .15s; }
+  .icon-btn:hover { background: var(--bg); border-color: var(--border2); }
+  .icon-btn.del:hover { border-color: #fca5a5; color: var(--accent3); background: var(--accent3-light); }
+
+  /* 폼 */
+  .add-form { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .form-title { font-size: 13px; font-weight: 800; margin-bottom: 14px; color: var(--text); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-full { grid-column: 1 / -1; }
+  .form-group label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 6px; font-weight: 700; }
+  .form-group input, .form-group select {
+    width: 100%; background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif; transition: border-color .15s; outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+  /* 카테고리 관리 */
+  .cat-manage-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .cat-manage-row { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+
+  /* 이름 이중 언어 탭 */
+  .bil-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+  .bil-tab {
+    padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 700;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--white); color: var(--text3); transition: all .15s;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .bil-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* 로그인 */
+  .login-box { max-width: 360px; margin: 0 auto; text-align: center; padding: 16px 0; }
+  .login-box p { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.7; }
+  .login-box input {
+    width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 13px 16px; color: var(--text); font-size: 15px;
+    font-family: 'IBM Plex Mono', monospace; outline: none;
+    margin-bottom: 12px; text-align: center; letter-spacing: 6px; transition: border-color .15s;
+  }
+  .login-box input:focus { border-color: var(--accent); }
+  .login-error { color: var(--accent3); font-size: 12px; margin-top: 8px; font-weight: 600; }
+
+  /* 편집 모달 */
+  #edit-modal { display: none; position: fixed; inset: 0; background: rgba(30,37,51,.5); z-index: 2000; align-items: center; justify-content: center; }
+  #edit-modal.open { display: flex; }
+  .edit-box { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 26px; width: 100%; max-width: 540px; margin: 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.14); }
+  .edit-box h3 { font-size: 16px; font-weight: 800; margin-bottom: 18px; color: var(--text); }
+
+  /* 토스트 */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--text); color: #fff;
+    border-radius: 10px; padding: 13px 20px;
+    font-size: 13px; font-weight: 600;
+    transform: translateY(80px); opacity: 0; transition: all .25s; z-index: 9999;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 640px) {
+    .hero { flex-direction: column; }
+    .form-grid { grid-template-columns: 1fr; }
+    header { padding: 0 16px; }
+    .container { padding: 20px 16px; }
+    .hero-stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    JNFAM<span>/portal</span>
+  </div>
+  <div class="header-right">
+    <span id="last-updated" style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace"></span>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="btn" id="btn-admin" onclick="openAdmin()">⚙️ 관리자</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-text">
+      <h1 id="hero-title">🏢 JNFAM 팀 포털</h1>
+      <p id="hero-sub">수출·수입·업무 파일과 앱을 한 곳에서 바로 접근하세요</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label" id="stat-lbl-total">전체 링크</div></div>
+      <div class="stat"><div class="stat-num" id="stat-cats">0</div><div class="stat-label" id="stat-lbl-cats">카테고리</div></div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span style="font-size:16px;color:var(--text3)">🔍</span>
+    <input type="text" id="search-input" placeholder="파일명, 앱 이름으로 검색..." oninput="renderPortal()">
+  </div>
+
+  <div class="cat-tabs" id="cat-tabs"></div>
+  <div id="portal-content"></div>
+</div>
+
+<!-- 관리자 패널 -->
+<div id="admin-panel">
+  <div class="admin-modal">
+
+    <!-- 로그인 -->
+    <div id="login-screen">
+      <h2 id="l-title">🔐 관리자 로그인</h2>
+      <p class="sub" id="l-sub">관리자 비밀번호를 입력하세요</p>
+      <div class="login-box">
+        <p id="l-desc">포털 링크를 추가·수정·삭제하려면<br>관리자 인증이 필요합니다</p>
+        <input type="password" id="pw-input" onkeydown="if(event.key==='Enter')checkPw()">
+        <button class="btn primary" style="width:100%;justify-content:center;padding:11px" id="l-btn" onclick="checkPw()">로그인</button>
+        <div class="login-error" id="pw-error"></div>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:16px">
+        <button class="btn" id="l-cancel" onclick="closeAdmin()">취소</button>
+      </div>
+    </div>
+
+    <!-- 관리 화면 -->
+    <div id="manage-screen" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 id="m-title">⚙️ 포털 관리</h2>
+        <button class="btn" id="m-close" onclick="closeAdmin()">✕ 닫기</button>
+      </div>
+      <p class="sub" id="m-sub">링크와 카테고리를 추가·수정·삭제할 수 있습니다</p>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" id="at-links" onclick="switchTab('links')">🔗 링크 관리</button>
+        <button class="admin-tab" id="at-cats" onclick="switchTab('cats')">🗂 카테고리</button>
+        <button class="admin-tab" id="at-settings" onclick="switchTab('settings')">⚙️ 설정</button>
+      </div>
+
+      <!-- 링크 탭 -->
+      <div class="admin-section active" id="tab-links">
+        <div class="link-list" id="admin-link-list"></div>
+        <div class="add-form">
+          <div class="form-title" id="ft-addlink">+ 새 링크 추가</div>
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label id="fl-name">이름 *</label>
+              <div class="bil-tabs">
+                <button class="bil-tab active" onclick="bilTab('add-name','ko',this)">KO 한국어</button>
+                <button class="bil-tab" onclick="bilTab('add-name','en',this)">EN English</button>
+              </div>
+              <input type="text" id="f-name-ko" placeholder="예: 수출 인보이스 현황">
+              <input type="text" id="f-name-en" placeholder="e.g. Export Invoice Status" style="display:none;margin-top:6px">
+            </div>
+            <div class="form-group">
+              <label id="fl-icon">아이콘 (이모지)</label>
+              <input type="text" id="f-icon" maxlength="4" placeholder="📄">
+            </div>
+            <div class="form-group">
+              <label id="fl-cat">카테고리</label>
+              <select id="f-cat"></select>
+            </div>
+            <div class="form-group form-full">
+              <label id="fl-url">URL *</label>
+              <input type="text" id="f-url" placeholder="https://... 또는 Teams 파일 링크">
+            </div>
+            <div class="form-group">
+              <label id="fl-type">유형 표시</label>
+              <input type="text" id="f-type" placeholder="Excel, 웹앱, Teams...">
+            </div>
+            <div class="form-group">
+              <label id="fl-desc">설명 (선택)</label>
+              <div class="bil-tabs">
+                <button class="bil-tab active" onclick="bilTab('add-desc','ko',this)">KO</button>
+                <button class="bil-tab" onclick="bilTab('add-desc','en',this)">EN</button>
+              </div>
+              <input type="text" id="f-desc-ko" placeholder="한국어 설명">
+              <input type="text" id="f-desc-en" placeholder="English description" style="display:none;margin-top:6px">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn success" id="ft-addbtn" onclick="addLink()">✚ 추가하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카테고리 탭 -->
+      <div class="admin-section" id="tab-cats">
+        <div class="cat-manage-list" id="cat-manage-list"></div>
+        <div class="add-form">
+          <div class="form-title" id="ft-addcat">+ 새 카테고리 추가</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>카테고리 이름 (한국어) *</label>
+              <input type="text" id="cat-name-ko" placeholder="예: 수출">
+            </div>
+            <div class="form-group">
+              <label>Category Name (English) *</label>
+              <input type="text" id="cat-name-en" placeholder="e.g. Export">
+            </div>
+            <div class="form-group">
+              <label>아이콘 (이모지)</label>
+              <input type="text" id="cat-icon" maxlength="4" placeholder="📁">
+            </div>
+            <div class="form-group">
+              <label>색상 / Color</label>
+              <select id="cat-color">
+                <option value="#2563eb">파랑 / Blue</option>
+                <option value="#16a34a">초록 / Green</option>
+                <option value="#7c3aed">보라 / Purple</option>
+                <option value="#ea580c">주황 / Orange</option>
+                <option value="#dc2626">빨강 / Red</option>
+                <option value="#0891b2">청록 / Teal</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn success" id="ft-catbtn" onclick="addCategory()">✚ 카테고리 추가</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 설정 탭 -->
+      <div class="admin-section" id="tab-settings">
+        <div class="add-form" style="margin-bottom:14px">
+          <div class="form-title">⚙️ 포털 설정 / Portal Settings</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>포털 제목 (한국어)</label>
+              <input type="text" id="set-title-ko">
+            </div>
+            <div class="form-group">
+              <label>Portal Title (English)</label>
+              <input type="text" id="set-title-en">
+            </div>
+            <div class="form-group">
+              <label>부제 (한국어)</label>
+              <input type="text" id="set-sub-ko">
+            </div>
+            <div class="form-group">
+              <label>Subtitle (English)</label>
+              <input type="text" id="set-sub-en">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn success" onclick="saveSettings()">💾 저장 / Save</button>
+          </div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;font-weight:700">💾 데이터 관리 / Data Management</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" onclick="exportData()">📤 내보내기 / Export</button>
+            <button class="btn" onclick="document.getElementById('import-file').click()">📥 가져오기 / Import</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+            <button class="btn danger" onclick="if(confirm(T('confirmReset')))resetData()">🗑 초기화 / Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 편집 모달 -->
+<div id="edit-modal">
+  <div class="edit-box">
+    <h3 id="edit-h3">✏️ 링크 수정</h3>
+    <input type="hidden" id="edit-id">
+    <div class="form-grid">
+      <div class="form-group form-full">
+        <label>이름 * / Name *</label>
+        <div class="bil-tabs">
+          <button class="bil-tab active" onclick="bilTab('edit-name','ko',this)">KO 한국어</button>
+          <button class="bil-tab" onclick="bilTab('edit-name','en',this)">EN English</button>
+        </div>
+        <input type="text" id="edit-name-ko">
+        <input type="text" id="edit-name-en" style="display:none;margin-top:6px">
+      </div>
+      <div class="form-group"><label>아이콘 / Icon</label><input type="text" id="edit-icon" maxlength="4"></div>
+      <div class="form-group"><label>카테고리 / Category</label><select id="edit-cat"></select></div>
+      <div class="form-group form-full"><label>URL *</label><input type="text" id="edit-url"></div>
+      <div class="form-group"><label>유형 / Type</label><input type="text" id="edit-type"></div>
+      <div class="form-group">
+        <label>설명 / Description</label>
+        <div class="bil-tabs">
+          <button class="bil-tab active" onclick="bilTab('edit-desc','ko',this)">KO</button>
+          <button class="bil-tab" onclick="bilTab('edit-desc','en',this)">EN</button>
+        </div>
+        <input type="text" id="edit-desc-ko">
+        <input type="text" id="edit-desc-en" style="display:none;margin-top:6px">
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:16px">
+      <button class="btn" onclick="closeEdit()">취소 / Cancel</button>
+      <button class="btn success" onclick="saveEdit()">💾 저장 / Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── 다국어 ────────────────────────────────────
+const LANG = {
+  ko: {
+    adminBtn:'⚙️ 관리자', statLinks:'전체 링크', statCats:'카테고리',
+    searchPh:'파일명, 앱 이름으로 검색...', filterAll:'전체', updLbl:'업데이트',
+    lTitle:'🔐 관리자 로그인', lSub:'관리자 비밀번호를 입력하세요',
+    lDesc:'포털 링크를 추가·수정·삭제하려면\n관리자 인증이 필요합니다',
+    lBtn:'로그인', lCancel:'취소', pwWrong:'❌ 비밀번호가 틀렸습니다',
+    mTitle:'⚙️ 포털 관리', mSub:'링크와 카테고리를 추가·수정·삭제할 수 있습니다',
+    mClose:'✕ 닫기', atLinks:'🔗 링크 관리', atCats:'🗂 카테고리', atSettings:'⚙️ 설정',
+    ftAddLink:'+ 새 링크 추가', flName:'이름 *', flIcon:'아이콘 (이모지)',
+    flCat:'카테고리', flUrl:'URL *', flType:'유형 표시', flDesc:'설명 (선택)',
+    ftAddBtn:'✚ 추가하기', ftAddCat:'+ 새 카테고리 추가', ftCatBtn:'✚ 카테고리 추가',
+    editH3:'✏️ 링크 수정',
+    confirmReset:'모든 데이터를 초기화할까요?',
+    confirmDel:'이 링크를 삭제할까요?',
+    confirmDelCat: n=>`이 카테고리에 링크 ${n}개가 있습니다. 삭제할까요?`,
+    tAdded:'✅ 링크가 추가되었습니다', tEdited:'✅ 수정되었습니다',
+    tDeleted:'🗑 링크가 삭제되었습니다', tCatAdded:'✅ 카테고리가 추가되었습니다',
+    tCatDel:'🗑 카테고리가 삭제되었습니다', tSettings:'✅ 설정이 저장되었습니다',
+    tExport:'📤 백업 파일 다운로드 중...', tImport:'✅ 데이터를 가져왔습니다',
+    tImportErr:'❌ 올바른 백업 파일이 아닙니다', tReset:'🗑 초기화되었습니다',
+    tFillReq:'❌ 이름과 URL을 입력하세요', tFillCat:'❌ 카테고리 이름을 입력하세요',
+    emptyQ: q=>`"${q}" 검색 결과가 없습니다`,
+    emptyAll:'등록된 링크가 없습니다. 관리자 화면에서 추가하세요.',
+    noLinks:'등록된 링크가 없습니다',
+  },
+  en: {
+    adminBtn:'⚙️ Admin', statLinks:'Total Links', statCats:'Categories',
+    searchPh:'Search by file or app name...', filterAll:'All', updLbl:'Updated',
+    lTitle:'🔐 Admin Login', lSub:'Enter the admin password',
+    lDesc:'Authentication required\nto add, edit, or delete portal links',
+    lBtn:'Login', lCancel:'Cancel', pwWrong:'❌ Incorrect password',
+    mTitle:'⚙️ Portal Admin', mSub:'Add, edit, or delete links and categories',
+    mClose:'✕ Close', atLinks:'🔗 Links', atCats:'🗂 Categories', atSettings:'⚙️ Settings',
+    ftAddLink:'+ Add New Link', flName:'Name *', flIcon:'Icon (emoji)',
+    flCat:'Category', flUrl:'URL *', flType:'Type Label', flDesc:'Description (optional)',
+    ftAddBtn:'✚ Add Link', ftAddCat:'+ Add New Category', ftCatBtn:'✚ Add Category',
+    editH3:'✏️ Edit Link',
+    confirmReset:'Reset all data? This cannot be undone.',
+    confirmDel:'Delete this link?',
+    confirmDelCat: n=>`This category has ${n} link(s). Delete anyway?`,
+    tAdded:'✅ Link added', tEdited:'✅ Changes saved',
+    tDeleted:'🗑 Link deleted', tCatAdded:'✅ Category added',
+    tCatDel:'🗑 Category deleted', tSettings:'✅ Settings saved',
+    tExport:'📤 Backup downloading...', tImport:'✅ Data imported',
+    tImportErr:'❌ Invalid backup file', tReset:'🗑 Data reset',
+    tFillReq:'❌ Please enter a name and URL', tFillCat:'❌ Please enter a category name',
+    emptyQ: q=>`No results for "${q}"`,
+    emptyAll:'No links yet. Add some in the admin panel.',
+    noLinks:'No links registered',
+  }
+};
+
+let lang = localStorage.getItem('jnfam_lang') || 'ko';
+function T(k,a){ const v=LANG[lang][k]; return typeof v==='function'?v(a):(v||k); }
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('jnfam_lang', l);
+  document.getElementById('btn-ko').classList.toggle('active', l==='ko');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  applyLang();
+  renderPortal();
+  if (isLoggedIn) { renderAdminLinks(); renderAdminCats(); }
+}
+
+function applyLang() {
+  const s=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  const p=(id,v)=>{ const e=document.getElementById(id); if(e) e.placeholder=v; };
+  s('btn-admin',T('adminBtn')); p('search-input',T('searchPh'));
+  s('stat-lbl-total',T('statLinks')); s('stat-lbl-cats',T('statCats'));
+  document.getElementById('hero-title').textContent = '🏢 '+(lang==='ko'?DATA.titleKo:DATA.titleEn);
+  document.getElementById('hero-sub').textContent = lang==='ko'?DATA.subKo:DATA.subEn;
+  s('l-title',T('lTitle')); s('l-sub',T('lSub'));
+  document.getElementById('l-desc').innerHTML = T('lDesc').replace('\n','<br>');
+  s('l-btn',T('lBtn')); s('l-cancel',T('lCancel'));
+  s('m-title',T('mTitle')); s('m-sub',T('mSub')); s('m-close',T('mClose'));
+  s('at-links',T('atLinks')); s('at-cats',T('atCats')); s('at-settings',T('atSettings'));
+  s('ft-addlink',T('ftAddLink')); s('fl-name',T('flName')); s('fl-icon',T('flIcon'));
+  s('fl-cat',T('flCat')); s('fl-url',T('flUrl')); s('fl-type',T('flType')); s('fl-desc',T('flDesc'));
+  s('ft-addbtn',T('ftAddBtn')); s('ft-addcat',T('ftAddCat')); s('ft-catbtn',T('ftCatBtn'));
+  s('edit-h3',T('editH3'));
+  updateLastUpdated();
+}
+
+// ── 색상 맵 ───────────────────────────────────
+const COLOR_LIGHT = {
+  '#2563eb':'#eff4ff','#16a34a':'#f0fdf4','#7c3aed':'#f5f3ff',
+  '#ea580c':'#fff7ed','#dc2626':'#fef2f2','#0891b2':'#ecfeff'
+};
+function lightOf(c){ return COLOR_LIGHT[c]||'#f5f6fa'; }
+
+// ── 기본 데이터 ───────────────────────────────
+const DEFAULT = {
+  titleKo:'JNFAM 팀 포털', titleEn:'JNFAM Team Portal',
+  subKo:'수출·수입·업무 파일과 앱을 한 곳에서 바로 접근하세요',
+  subEn:'Quick access to all export, import & work files in one place',
+  password:'1234',
+  categories:[
+    {id:'export',nameKo:'수출',nameEn:'Export',icon:'🚢',color:'#2563eb'},
+    {id:'import',nameKo:'수입',nameEn:'Import',icon:'📦',color:'#16a34a'},
+    {id:'apps',  nameKo:'웹 앱',nameEn:'Web Apps',icon:'🌐',color:'#7c3aed'},
+    {id:'hr',    nameKo:'인사/총무',nameEn:'HR / Admin',icon:'👥',color:'#dc2626'},
+    {id:'general',nameKo:'일반',nameEn:'General',icon:'📁',color:'#ea580c'},
+  ],
+  links:[
+    {id:1,nameKo:'JNFAM Task Calendar',nameEn:'JNFAM Task Calendar',icon:'📅',url:'https://yt9495.github.io/JNFAM-Task-Plan/',cat:'apps',type:'WebApp',descKo:'팀 일정 및 태스크 관리',descEn:'Team schedule & task management'},
+    {id:2,nameKo:'Production Plan',nameEn:'Production Plan',icon:'🏭',url:'https://yt9495.github.io/JNFAM-Task-Plan/workplan.html',cat:'apps',type:'WebApp',descKo:'생산 계획 현황',descEn:'Production plan status'},
+    {id:3,nameKo:'JNFAM Leave Management',nameEn:'JNFAM Leave Management',icon:'🗓',url:'#',cat:'hr',type:'WebApp',descKo:'휴가 신청 및 현황 관리',descEn:'Leave request & management'},
+  ],
+  updatedAt: new Date().toISOString()
+};
+
+let DATA = loadData();
+let activeFilter = 'all';
+let isLoggedIn = false;
+
+function loadData() {
+  try {
+    const s=localStorage.getItem('jnfam_portal');
+    const d=s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT));
+    if(!d.titleKo){d.titleKo=d.title||DEFAULT.titleKo;d.titleEn=DEFAULT.titleEn;}
+    if(!d.subKo){d.subKo=d.subtitle||DEFAULT.subKo;d.subEn=DEFAULT.subEn;}
+    d.categories=d.categories.map(c=>({...c,nameKo:c.nameKo||c.name||'',nameEn:c.nameEn||c.name||''}));
+    d.links=d.links.map(l=>({...l,nameKo:l.nameKo||l.name||'',nameEn:l.nameEn||l.name||'',descKo:l.descKo||l.desc||'',descEn:l.descEn||l.desc||''}));
+    return d;
+  } catch { return JSON.parse(JSON.stringify(DEFAULT)); }
+}
+
+function saveData() {
+  DATA.updatedAt=new Date().toISOString();
+  localStorage.setItem('jnfam_portal',JSON.stringify(DATA));
+  updateLastUpdated();
+}
+
+function updateLastUpdated() {
+  const el=document.getElementById('last-updated');
+  if(DATA.updatedAt){
+    const d=new Date(DATA.updatedAt);
+    el.textContent=`${T('updLbl')}: ${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+}
+
+const catName=c=>lang==='ko'?c.nameKo:c.nameEn;
+const linkName=l=>lang==='ko'?l.nameKo:l.nameEn;
+const linkDesc=l=>lang==='ko'?l.descKo:l.descEn;
+
+// ── 포털 렌더링 ───────────────────────────────
+function renderPortal() {
+  const q=document.getElementById('search-input').value.toLowerCase();
+  const tabs=document.getElementById('cat-tabs');
+  tabs.innerHTML=`<button class="cat-tab ${activeFilter==='all'?'active':''}" onclick="setFilter('all')">${T('filterAll')} ${DATA.links.length}</button>`;
+  DATA.categories.forEach(c=>{
+    const n=DATA.links.filter(l=>l.cat===c.id).length;
+    if(n>0) tabs.innerHTML+=`<button class="cat-tab ${activeFilter===c.id?'active':''}" style="${activeFilter===c.id?`background:${c.color};border-color:${c.color}`:''};" onclick="setFilter('${c.id}')">${c.icon} ${catName(c)} ${n}</button>`;
+  });
+  document.getElementById('stat-total').textContent=DATA.links.length;
+  document.getElementById('stat-cats').textContent=DATA.categories.filter(c=>DATA.links.some(l=>l.cat===c.id)).length;
+
+  const catsShow=activeFilter==='all'?DATA.categories:DATA.categories.filter(c=>c.id===activeFilter);
+  let html='',hasAny=false;
+  catsShow.forEach(cat=>{
+    let links=DATA.links.filter(l=>l.cat===cat.id);
+    if(q) links=links.filter(l=>linkName(l).toLowerCase().includes(q)||linkDesc(l).toLowerCase().includes(q));
+    if(!links.length) return;
+    hasAny=true;
+    html+=`<div class="section"><div class="section-header"><div class="section-title"><div class="section-dot" style="background:${cat.color}"></div>${cat.icon} ${catName(cat)}</div><span class="section-count">${links.length}</span></div><div class="cards">`;
+    links.forEach(l=>{
+      const bg=lightOf(cat.color);
+      html+=`<a class="card" href="${l.url}" target="_blank" rel="noopener" style="--hover-color:${cat.color}"><div class="card-top-bar" style="background:${cat.color}"></div><div class="card-icon">${l.icon||'📄'}</div><div class="card-name">${linkName(l)}</div>${linkDesc(l)?`<div class="card-desc">${linkDesc(l)}</div>`:''}<div class="card-footer"><span class="card-type" style="background:${bg};color:${cat.color}">${l.type||catName(cat)}</span><span class="card-arrow" style="color:${cat.color}">→</span></div></a>`;
+    });
+    html+=`</div></div>`;
+  });
+  if(!hasAny) html=`<div class="empty"><div class="empty-icon">🔍</div><p>${q?T('emptyQ',q):T('emptyAll')}</p></div>`;
+  document.getElementById('portal-content').innerHTML=html;
+  document.querySelectorAll('.card').forEach(card=>{
+    const bar=card.querySelector('.card-top-bar');
+    if(bar){card.addEventListener('mouseenter',()=>bar.style.opacity='1');card.addEventListener('mouseleave',()=>bar.style.opacity='0');}
+  });
+}
+
+function setFilter(id){activeFilter=id;renderPortal();}
+
+// ── 이중 언어 탭 ──────────────────────────────
+function bilTab(group, lang, btn) {
+  btn.closest('.bil-tabs').querySelectorAll('.bil-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(group+'-ko').style.display = lang==='ko'?'':'none';
+  document.getElementById(group+'-en').style.display = lang==='en'?'':'none';
+}
+
+// ── 관리자 ────────────────────────────────────
+function openAdmin(){
+  document.getElementById('admin-panel').classList.add('open');
+  document.getElementById('pw-error').textContent='';
+  document.getElementById('pw-input').value='';
+  if(isLoggedIn) showManage();
+  else{
+    document.getElementById('login-screen').style.display='';
+    document.getElementById('manage-screen').style.display='none';
+    setTimeout(()=>document.getElementById('pw-input').focus(),100);
+  }
+}
+function closeAdmin(){document.getElementById('admin-panel').classList.remove('open');}
+function checkPw(){
+  if(document.getElementById('pw-input').value===DATA.password){isLoggedIn=true;showManage();}
+  else{document.getElementById('pw-error').textContent=T('pwWrong');document.getElementById('pw-input').value='';document.getElementById('pw-input').focus();}
+}
+function showManage(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('manage-screen').style.display='';
+  renderAdminLinks();renderAdminCats();renderCatOpts();loadSettings();
+}
+function switchTab(tab){
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── 링크 CRUD ─────────────────────────────────
+function renderAdminLinks(){
+  const el=document.getElementById('admin-link-list');
+  if(!DATA.links.length){el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">${T('noLinks')}</div>`;return;}
+  el.innerHTML=DATA.links.map(l=>{
+    const c=DATA.categories.find(c=>c.id===l.cat)||{color:'#9aa3b5',nameKo:'미분류',nameEn:'Uncategorized'};
+    return `<div class="link-row"><div class="link-row-icon">${l.icon||'📄'}</div><div class="link-row-info"><div class="link-row-name">${linkName(l)}</div><div class="link-row-url">${l.url}</div></div><span class="link-row-cat" style="background:${lightOf(c.color)};color:${c.color}">${catName(c)}</span><div class="link-row-actions"><button class="icon-btn" onclick="openEdit(${l.id})">✏️</button><button class="icon-btn del" onclick="deleteLink(${l.id})">🗑</button></div></div>`;
+  }).join('');
+}
+
+function renderCatOpts(id){
+  const ids=id?[id]:['f-cat','edit-cat'];
+  ids.forEach(sid=>{const s=document.getElementById(sid);if(s)s.innerHTML=DATA.categories.map(c=>`<option value="${c.id}">${c.icon} ${catName(c)}</option>`).join('');});
+}
+
+function addLink(){
+  const nko=document.getElementById('f-name-ko').value.trim();
+  const nen=document.getElementById('f-name-en').value.trim();
+  const url=document.getElementById('f-url').value.trim();
+  if(!nko||!url){toast(T('tFillReq'));return;}
+  DATA.links.push({
+    id:Date.now(),nameKo:nko,nameEn:nen||nko,
+    icon:document.getElementById('f-icon').value.trim()||'📄',url,
+    cat:document.getElementById('f-cat').value,
+    type:document.getElementById('f-type').value.trim(),
+    descKo:document.getElementById('f-desc-ko').value.trim(),
+    descEn:document.getElementById('f-desc-en').value.trim(),
+  });
+  saveData();renderPortal();renderAdminLinks();
+  ['f-name-ko','f-name-en','f-icon','f-url','f-type','f-desc-ko','f-desc-en'].forEach(id=>document.getElementById(id).value='');
+  toast(T('tAdded'));
+}
+
+function deleteLink(id){
+  if(!confirm(T('confirmDel')))return;
+  DATA.links=DATA.links.filter(l=>l.id!==id);
+  saveData();renderPortal();renderAdminLinks();
+  toast(T('tDeleted'));
+}
+
+function openEdit(id){
+  const l=DATA.links.find(l=>l.id===id);if(!l)return;
+  renderCatOpts('edit-cat');
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-name-ko').value=l.nameKo||'';
+  document.getElementById('edit-name-en').value=l.nameEn||'';
+  document.getElementById('edit-icon').value=l.icon||'';
+  document.getElementById('edit-url').value=l.url;
+  document.getElementById('edit-cat').value=l.cat;
+  document.getElementById('edit-type').value=l.type||'';
+  document.getElementById('edit-desc-ko').value=l.descKo||'';
+  document.getElementById('edit-desc-en').value=l.descEn||'';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEdit(){document.getElementById('edit-modal').classList.remove('open');}
+function saveEdit(){
+  const id=parseInt(document.getElementById('edit-id').value);
+  const idx=DATA.links.findIndex(l=>l.id===id);if(idx===-1)return;
+  DATA.links[idx]={
+    id,
+    nameKo:document.getElementById('edit-name-ko').value.trim(),
+    nameEn:document.getElementById('edit-name-en').value.trim(),
+    icon:document.getElementById('edit-icon').value.trim()||'📄',
+    url:document.getElementById('edit-url').value.trim(),
+    cat:document.getElementById('edit-cat').value,
+    type:document.getElementById('edit-type').value.trim(),
+    descKo:document.getElementById('edit-desc-ko').value.trim(),
+    descEn:document.getElementById('edit-desc-en').value.trim(),
+  };
+  saveData();renderPortal();renderAdminLinks();closeEdit();
+  toast(T('tEdited'));
+}
+
+// ── 카테고리 CRUD ─────────────────────────────
+function renderAdminCats(){
+  document.getElementById('cat-manage-list').innerHTML=DATA.categories.map(c=>`
+    <div class="cat-manage-row">
+      <span style="font-size:20px">${c.icon}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text)">${c.nameKo}</span>
+      <span style="font-size:12px;color:var(--text3)"> / ${c.nameEn}</span>
+      <span style="flex:1"></span>
+      <span style="width:14px;height:14px;border-radius:50%;background:${c.color};display:inline-block;border:2px solid ${lightOf(c.color)}"></span>
+      <span style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;min-width:28px;text-align:right">${DATA.links.filter(l=>l.cat===c.id).length}개</span>
+      <button class="icon-btn del" onclick="deleteCategory('${c.id}')">🗑</button>
+    </div>`).join('');
+}
+
+function addCategory(){
+  const nko=document.getElementById('cat-name-ko').value.trim();
+  const nen=document.getElementById('cat-name-en').value.trim();
+  if(!nko){toast(T('tFillCat'));return;}
+  DATA.categories.push({id:'cat_'+Date.now(),nameKo:nko,nameEn:nen||nko,icon:document.getElementById('cat-icon').value.trim()||'📁',color:document.getElementById('cat-color').value});
+  saveData();renderAdminCats();renderCatOpts();renderPortal();
+  document.getElementById('cat-name-ko').value='';
+  document.getElementById('cat-name-en').value='';
+  document.getElementById('cat-icon').value='';
+  toast(T('tCatAdded'));
+}
+
+function deleteCategory(id){
+  const n=DATA.links.filter(l=>l.cat===id).length;
+  if(n>0&&!confirm(T('confirmDelCat',n)))return;
+  DATA.categories=DATA.categories.filter(c=>c.id!==id);
+  saveData();renderAdminCats();renderCatOpts();renderPortal();
+  toast(T('tCatDel'));
+}
+
+// ── 설정 ──────────────────────────────────────
+function loadSettings(){
+  document.getElementById('set-title-ko').value=DATA.titleKo||'';
+  document.getElementById('set-title-en').value=DATA.titleEn||'';
+  document.getElementById('set-sub-ko').value=DATA.subKo||'';
+  document.getElementById('set-sub-en').value=DATA.subEn||'';
+}
+function saveSettings(){
+  DATA.titleKo=document.getElementById('set-title-ko').value.trim()||DATA.titleKo;
+  DATA.titleEn=document.getElementById('set-title-en').value.trim()||DATA.titleEn;
+  DATA.subKo=document.getElementById('set-sub-ko').value.trim()||DATA.subKo;
+  DATA.subEn=document.getElementById('set-sub-en').value.trim()||DATA.subEn;
+  saveData();applyLang();toast(T('tSettings'));
+}
+
+// ── 백업 ──────────────────────────────────────
+function exportData(){
+  const b=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='jnfam_portal_backup.json';a.click();
+  toast(T('tExport'));
+}
+function importData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{const d=JSON.parse(ev.target.result);if(!d.links||!d.categories)throw new Error();DATA=d;saveData();applyLang();renderPortal();renderAdminLinks();renderAdminCats();loadSettings();toast(T('tImport'));}
+    catch{toast(T('tImportErr'));}
+  };
+  r.readAsText(f);e.target.value='';
+}
+function resetData(){DATA=JSON.parse(JSON.stringify(DEFAULT));saveData();applyLang();renderPortal();closeAdmin();toast(T('tReset'));}
+
+// ── 토스트 ────────────────────────────────────
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── 초기화 ────────────────────────────────────
+document.getElementById('admin-panel').addEventListener('click',e=>{if(e.target===document.getElementById('admin-panel'))closeAdmin();});
+document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeEdit();});
+
+document.getElementById('btn-ko').classList.toggle('active',lang==='ko');
+document.getElementById('btn-en').classList.toggle('active',lang==='en');
+applyLang();
+renderPortal();
+</script>
+</body>
+</html>
