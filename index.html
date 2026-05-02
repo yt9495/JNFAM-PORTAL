@@ -42,8 +42,6 @@
   .stat-label { font-size: 11px; opacity: .7; margin-top: 2px; }
 
   .status-box { text-align: center; padding: 56px; border-radius: 12px; background: var(--white); border: 1px solid var(--border); }
-  .status-icon { font-size: 40px; margin-bottom: 12px; }
-  .status-box p { font-size: 14px; color: var(--text2); margin-bottom: 16px; }
   .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -154,7 +152,7 @@
   <div id="portal-content">
     <div class="status-box">
       <div class="spinner"></div>
-      <p>Google Sheets에서 데이터를 불러오는 중...</p>
+      <p style="font-size:14px;color:var(--text2)">Google Sheets에서 데이터를 불러오는 중...</p>
     </div>
   </div>
 </div>
@@ -166,9 +164,11 @@ const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxYhXuIOp0veEWpmy28f
 
 const COLORS = ['#2563eb','#16a34a','#7c3aed','#ea580c','#dc2626','#0891b2','#d97706','#be185d','#0d9488','#4f46e5'];
 const LIGHT  = {'#2563eb':'#eff4ff','#16a34a':'#f0fdf4','#7c3aed':'#f5f3ff','#ea580c':'#fff7ed','#dc2626':'#fef2f2','#0891b2':'#ecfeff','#d97706':'#fffbeb','#be185d':'#fdf2f8','#0d9488':'#f0fdfa','#4f46e5':'#eef2ff'};
-const ICONS  = {'수출':'🚢','export':'🚢','수입':'📦','import':'📦','웹앱':'🌐','web apps':'🌐','webapp':'🌐','인사':'👥','hr':'👥','총무':'👥','일반':'📁','general':'📁','재무':'💰','finance':'💰','생산':'🏭','production':'🏭','영업':'📈','sales':'📈'};
 const lightOf = c => LIGHT[c]||'#f5f6fa';
-const catIcon = c => ICONS[c.toLowerCase()]||'📂';
+
+// 카테고리 아이콘 — 시트에 icon 없을 때만 사용하는 기본값
+const CAT_ICONS = {'웹앱':'🌐','webapp':'🌐','web apps':'🌐','수출':'🚢','export':'🚢','수입':'📦','import':'📦','생산':'🏭','production':'🏭','인사':'👥','hr':'👥','총무':'👥','재무':'💰','finance':'💰','영업':'📈','sales':'📈','scm':'🚛','inventory':'📦','일반':'📁','general':'📁'};
+const catIcon = c => CAT_ICONS[c.toLowerCase()]||'📂';
 
 const LANG = {
   ko:{
@@ -252,8 +252,8 @@ async function loadData(manual=false){
     if(!cached){
       document.getElementById('portal-content').innerHTML=`
         <div class="status-box">
-          <div class="status-icon">⚠️</div>
-          <p>데이터를 불러오지 못했어요. 🔄 새로고침을 눌러주세요.</p>
+          <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+          <p style="font-size:14px;color:var(--text2);margin-bottom:16px">데이터를 불러오지 못했어요.</p>
           <button class="refresh-btn" style="margin:0 auto" onclick="loadData(true)">🔄 다시 시도</button>
         </div>`;
     }
@@ -275,6 +275,13 @@ function processData(data){
 
 function getName(l){ return (lang==='ko'?(l.nameKo||l.name):(l.nameEn||l.nameKo||l.name))||''; }
 function getDesc(l){ return (lang==='ko'?(l.descKo||l.desc):(l.descEn||l.descKo||l.desc))||''; }
+
+// ── 핵심 수정: 시트 icon 값을 그대로 사용, 없을 때만 기본값 ──
+function getIcon(l){
+  const raw = (l.icon||'').toString().trim();
+  if(raw && raw.length > 0) return raw;
+  return '📄';
+}
 
 function renderPortal(){
   const q=document.getElementById('search-input').value.toLowerCase();
@@ -307,7 +314,7 @@ function renderPortal(){
     links.forEach(l=>{
       html+=`<a class="card" href="${l.url}" target="_blank" rel="noopener">
         <div class="card-top-bar" style="background:${c}"></div>
-        <div class="card-icon">${l.icon||'📄'}</div>
+        <div class="card-icon">${getIcon(l)}</div>
         <div class="card-name">${getName(l)}</div>
         ${getDesc(l)?`<div class="card-desc">${getDesc(l)}</div>`:''}
         <div class="card-footer">
