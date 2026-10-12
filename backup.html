@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<!--
+  © 2025–2026 Young Tai Kang. All rights reserved.
+  Unauthorized use, copying, modification, or distribution without the written permission of Young Tai Kang is prohibited.
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>JNFAM Data Backup</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #f5f6fa; --white: #fff; --border: #e2e6ef; --accent: #2563eb; --accent-light: #eff4ff;
+    --text: #1e2533; --text2: #5a6478; --text3: #9aa3b5; --ok: #15803d; --warn: #b45309; --err: #b91c1c;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; height: 58px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .logo span { color: var(--text3); font-weight: 500; }
+  .who { font-size: 12px; color: var(--text2); font-family: 'IBM Plex Mono', monospace; }
+  .container { max-width: 920px; margin: 0 auto; padding: 28px 16px 12px; }
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 20px 22px; margin-bottom: 18px; }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sub { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); background: var(--white); color: var(--text); font-family: inherit; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.small { padding: 5px 10px; font-size: 12px; font-weight: 600; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type=text] { flex: 1; min-width: 220px; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'IBM Plex Mono', monospace; }
+  details summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent); }
+  details ol { margin: 10px 0 0 20px; font-size: 13px; color: var(--text2); line-height: 1.8; }
+  code { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--accent-light); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+  .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 14px; }
+  .item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; padding: 4px 0; }
+  .item input { margin-top: 3px; }
+  .item .meta { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; }
+  .empty { font-size: 13px; color: var(--text3); }
+  #log { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.6; background: #0f172a; color: #cbd5e1; border-radius: 8px; padding: 12px 14px; max-height: 320px; overflow: auto; white-space: pre-wrap; display: none; }
+  #log .ok { color: #86efac; } #log .warn { color: #fcd34d; } #log .err { color: #fca5a5; }
+  .bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin: 12px 0 10px; display: none; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .note { font-size: 12px; color: var(--text3); margin-top: 10px; line-height: 1.6; }
+  .ytk-copyright{text-align:center;font-size:11px;line-height:1.4;color:#8a8f98;padding:10px 12px;font-family:inherit}
+  @media print{.ytk-copyright{display:none}}
+  @media (max-width: 600px) { header { padding: 0 16px; } .card { padding: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-dot"></div>JNFAM <span>/backup</span></div>
+  <div class="who" id="who"></div>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>데이터 전체 백업</h1>
+    <p class="sub">Firebase(Firestore·Realtime Database)와 선택한 구글 시트의 데이터를 모두 내려받아 하나의 ZIP 파일로 저장합니다. 프로그램별 엑셀과 원본 JSON이 함께 들어갑니다. 저장할 때 SharePoint 동기화 폴더를 선택하세요.</p>
+  </div>
+
+  <div class="card" id="setupCard">
+    <h2>1. 연결 설정</h2>
+    <div class="row">
+      <input type="text" id="clientId" placeholder="OAuth Client ID (xxxx.apps.googleusercontent.com)">
+      <button class="btn" id="saveCid">저장</button>
+    </div>
+    <details style="margin-top:12px">
+      <summary>최초 설정 방법 (한 번만)</summary>
+      <ol>
+        <li>Google Cloud Console에서 기존 Firebase 프로젝트 하나(예: <code>jnfam-ledger</code>)를 선택합니다.</li>
+        <li><b>APIs &amp; Services → Library</b>에서 다음 API를 사용 설정합니다: <code>Cloud Firestore API</code>, <code>Firebase Management API</code>, <code>Firebase Realtime Database Management API</code>, <code>Google Drive API</code>.</li>
+        <li><b>OAuth consent screen</b>: User type <b>External</b>, 앱 이름 "JNFAM Backup", 테스트 사용자에 본인 Gmail을 추가합니다.</li>
+        <li><b>Credentials → Create credentials → OAuth client ID</b>: 유형 <b>Web application</b>, Authorized JavaScript origins에 <code>https://yt9495.github.io</code> 추가.</li>
+        <li>만들어진 Client ID를 위 칸에 붙여넣고 저장합니다. 로그인 시 "확인되지 않은 앱" 경고가 나오면 <b>고급 → 계속</b>을 누르면 됩니다.</li>
+      </ol>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>2. 로그인 <button class="btn primary" id="signin" disabled>Google로 로그인</button></h2>
+    <p class="sub" id="signinMsg">Firebase 프로젝트 소유 계정으로 로그인하세요. 읽기 권한만 요청합니다.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. 백업 대상
+      <span class="row"><button class="btn small" id="selAll" disabled>전체 선택</button><button class="btn small" id="selNone" disabled>전체 해제</button></span>
+    </h2>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">Firebase 프로젝트</div>
+    <div class="list" id="projList"><div class="empty">로그인하면 자동으로 불러옵니다.</div></div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin:16px 0 6px">구글 시트 <span style="font-weight:400;color:var(--text3)">(포함할 시트만 체크, 선택은 저장됩니다)</span></div>
+    <div class="list" id="sheetList"><div class="empty">로그인하면 자동으로 불러옵니다.</div></div>
+  </div>
+
+  <div class="card">
+    <h2>4. 백업 실행 <button class="btn primary" id="run" disabled>백업 시작</button></h2>
+    <div class="bar" id="bar"><div></div></div>
+    <div id="log"></div>
+    <p class="note">파일 이름: <code>JNFAM_Backup_YYYY-MM-DD.zip</code>. 크롬·엣지에서는 저장 위치를 직접 고를 수 있고, 다음부터 같은 폴더가 기본으로 열립니다. 개인정보(급여·휴가·출퇴근)가 포함되므로 회사 지정 폴더에만 저장하세요.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const SCOPES = [
+    'https://www.googleapis.com/auth/datastore',
+    'https://www.googleapis.com/auth/firebase.readonly',
+    'https://www.googleapis.com/auth/firebase.database',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/drive.readonly'
+  ].join(' ');
+  const LS = { cid: 'jnfamBackup.clientId', sheets: 'jnfamBackup.sheets', projOff: 'jnfamBackup.projOff' };
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  let token = null, tokenClient = null, projects = [], sheets = [];
+
+  // ---------- setup ----------
+  $('clientId').value = store.get(LS.cid, '');
+  $('saveCid').onclick = () => {
+    const v = $('clientId').value.trim();
+    if (!/\.apps\.googleusercontent\.com$/.test(v)) { alert('Client ID 형식이 올바르지 않습니다.'); return; }
+    store.set(LS.cid, v); initClient();
+  };
+  function initClient() {
+    const cid = store.get(LS.cid, '');
+    if (!cid || !window.google?.accounts?.oauth2) { $('signin').disabled = true; return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: cid, scope: SCOPES,
+      callback: (resp) => {
+        if (resp.error) { $('signinMsg').textContent = '로그인 실패: ' + resp.error; return; }
+        token = resp.access_token; onSignedIn();
+      }
+    });
+    $('signin').disabled = false;
+  }
+  window.addEventListener('load', () => {
+    const wait = setInterval(() => { if (window.google?.accounts?.oauth2) { clearInterval(wait); initClient(); } }, 200);
+    setTimeout(() => clearInterval(wait), 15000);
+  });
+  $('signin').onclick = () => tokenClient && tokenClient.requestAccessToken({ prompt: token ? '' : 'consent' });
+
+  // ---------- http ----------
+  async function api(url, opts = {}, tries = 3) {
+    for (let i = 0; i < tries; i++) {
+      const r = await fetch(url, { ...opts, headers: { Authorization: 'Bearer ' + token, ...(opts.headers || {}) } });
+      if (r.ok) return r;
+      if ((r.status === 429 || r.status >= 500) && i < tries - 1) { await sleep(800 * (i + 1)); continue; }
+      const t = await r.text().catch(() => '');
+      const e = new Error(r.status + ' ' + t.slice(0, 200)); e.status = r.status; throw e;
+    }
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const json = async (url, opts) => (await api(url, opts)).json();
+
+  // ---------- discovery ----------
+  async function onSignedIn() {
+    try {
+      const me = await json('https://www.googleapis.com/oauth2/v3/userinfo');
+      $('who').textContent = me.email || '';
+      $('signinMsg').textContent = '로그인됨: ' + (me.email || '');
+    } catch { $('signinMsg').textContent = '로그인됨'; }
+    $('signin').textContent = '다시 로그인';
+    await Promise.all([loadProjects(), loadSheets()]);
+    $('run').disabled = false; $('selAll').disabled = false; $('selNone').disabled = false;
+  }
+
+  async function loadProjects() {
+    $('projList').innerHTML = '<div class="empty">불러오는 중…</div>';
+    projects = []; let pageToken = '';
+    try {
+      do {
+        const d = await json('https://firebase.googleapis.com/v1beta1/projects?pageSize=100' + (pageToken ? '&pageToken=' + pageToken : ''));
+        (d.results || []).forEach((p) => projects.push({ id: p.projectId, name: p.displayName || p.projectId, rtdb: p.resources?.realtimeDatabaseInstance || '' }));
+        pageToken = d.nextPageToken || '';
+      } while (pageToken);
+    } catch (e) { $('projList').innerHTML = '<div class="empty">프로젝트 목록을 불러오지 못했습니다: ' + esc(e.message) + '</div>'; return; }
+    projects.sort((a, b) => a.id.localeCompare(b.id));
+    const off = new Set(store.get(LS.projOff, []));
+    $('projList').innerHTML = projects.length ? projects.map((p) =>
+      `<label class="item"><input type="checkbox" data-proj="${esc(p.id)}" ${off.has(p.id) ? '' : 'checked'}><span>${esc(p.name)}<br><span class="meta">${esc(p.id)}</span></span></label>`).join('')
+      : '<div class="empty">Firebase 프로젝트가 없습니다.</div>';
+    $('projList').querySelectorAll('input').forEach((el) => el.onchange = saveProjSel);
+  }
+  function saveProjSel() {
+    store.set(LS.projOff, [...$('projList').querySelectorAll('input:not(:checked)')].map((el) => el.dataset.proj));
+  }
+
+  async function loadSheets() {
+    $('sheetList').innerHTML = '<div class="empty">불러오는 중…</div>';
+    sheets = []; let pageToken = '';
+    const q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and trashed=false and 'me' in owners");
+    try {
+      do {
+        const d = await json(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=200&orderBy=modifiedTime desc&fields=nextPageToken,files(id,name,modifiedTime)` + (pageToken ? '&pageToken=' + pageToken : ''));
+        sheets.push(...(d.files || []));
+        pageToken = d.nextPageToken || '';
+      } while (pageToken);
+    } catch (e) { $('sheetList').innerHTML = '<div class="empty">시트 목록을 불러오지 못했습니다: ' + esc(e.message) + '</div>'; return; }
+    const on = new Set(store.get(LS.sheets, []));
+    $('sheetList').innerHTML = sheets.length ? sheets.map((s) =>
+      `<label class="item"><input type="checkbox" data-sheet="${esc(s.id)}" ${on.has(s.id) ? 'checked' : ''}><span>${esc(s.name)}<br><span class="meta">수정 ${esc((s.modifiedTime || '').slice(0, 10))}</span></span></label>`).join('')
+      : '<div class="empty">시트가 없습니다.</div>';
+    $('sheetList').querySelectorAll('input').forEach((el) => el.onchange = saveSheetSel);
+  }
+  function saveSheetSel() {
+    store.set(LS.sheets, [...$('sheetList').querySelectorAll('input:checked')].map((el) => el.dataset.sheet));
+  }
+  $('selAll').onclick = () => { document.querySelectorAll('#projList input,#sheetList input').forEach((el) => el.checked = true); saveProjSel(); saveSheetSel(); };
+  $('selNone').onclick = () => { document.querySelectorAll('#projList input,#sheetList input').forEach((el) => el.checked = false); saveProjSel(); saveSheetSel(); };
+
+  // ---------- firestore ----------
+  function decode(v) {
+    if (v == null) return null;
+    if ('stringValue' in v) return v.stringValue;
+    if ('integerValue' in v) { const n = Number(v.integerValue); return Number.isSafeInteger(n) ? n : v.integerValue; }
+    if ('doubleValue' in v) return Number(v.doubleValue);
+    if ('booleanValue' in v) return v.booleanValue;
+    if ('nullValue' in v) return null;
+    if ('timestampValue' in v) return v.timestampValue;
+    if ('referenceValue' in v) return v.referenceValue.replace(/^projects\/[^/]+\/databases\/[^/]+\/documents\//, '');
+    if ('geoPointValue' in v) return v.geoPointValue;
+    if ('bytesValue' in v) return v.bytesValue;
+    if ('arrayValue' in v) return (v.arrayValue.values || []).map(decode);
+    if ('mapValue' in v) return decodeFields(v.mapValue.fields || {});
+    return v;
+  }
+  function decodeFields(f) { const o = {}; for (const k in f) o[k] = decode(f[k]); return o; }
+
+  const fsBase = (pid) => `https://firestore.googleapis.com/v1/projects/${pid}/databases/(default)/documents`;
+  const enc = (path) => path.split('/').map(encodeURIComponent).join('/');
+
+  async function listCollectionIds(pid, parentPath) {
+    const ids = []; let pageToken = '';
+    const url = fsBase(pid) + (parentPath ? '/' + enc(parentPath) : '') + ':listCollectionIds';
+    do {
+      const d = await json(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pageSize: 300, pageToken: pageToken || undefined }) });
+      ids.push(...(d.collectionIds || []));
+      pageToken = d.nextPageToken || '';
+    } while (pageToken);
+    return ids;
+  }
+  async function listDocs(pid, colPath) {
+    const docs = []; let pageToken = '';
+    do {
+      const d = await json(fsBase(pid) + '/' + enc(colPath) + '?pageSize=300&showMissing=true' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : ''));
+      (d.documents || []).forEach((doc) => {
+        const id = decodeURIComponent(doc.name.split('/').pop());
+        docs.push({ _id: id, _path: colPath + '/' + id, _missing: !doc.fields && !doc.createTime, ...(doc.fields ? decodeFields(doc.fields) : {}) });
+      });
+      pageToken = d.nextPageToken || '';
+    } while (pageToken);
+    return docs;
+  }
+  async function pool(items, n, fn) {
+    let i = 0; const out = new Array(items.length);
+    await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k], k); } }));
+    return out;
+  }
+  // returns { "col": [docs], "col/doc/sub": [docs], ... }
+  async function dumpFirestore(pid, log) {
+    const result = {};
+    let rootIds;
+    try { rootIds = await listCollectionIds(pid, ''); }
+    catch (e) { if (e.status === 404 || e.status === 403 || /NOT_FOUND|not exist|disabled/i.test(e.message)) return null; throw e; }
+    const queue = rootIds.map((c) => c);
+    while (queue.length) {
+      const colPath = queue.shift();
+      const docs = await listDocs(pid, colPath);
+      result[colPath] = docs.filter((d) => !d._missing).map(({ _missing, ...rest }) => rest);
+      log(`  ${pid} / ${colPath}: ${result[colPath].length}건`);
+      const subs = await pool(docs, 8, (d) => listCollectionIds(pid, d._path).catch(() => []));
+      docs.forEach((d, k) => subs[k].forEach((s) => queue.push(d._path + '/' + s)));
+      setProgress();
+    }
+    return result;
+  }
+
+  // ---------- realtime database ----------
+  async function rtdbUrls(p) {
+    const urls = new Set();
+    try {
+      const d = await json(`https://firebasedatabase.googleapis.com/v1beta/projects/${p.id}/locations/-/instances`);
+      (d.instances || []).forEach((i) => i.databaseUrl && urls.add(i.databaseUrl));
+    } catch {}
+    if (!urls.size && p.rtdb) urls.add(`https://${p.rtdb}.firebaseio.com`);
+    return [...urls];
+  }
+  async function dumpRtdb(url) {
+    const r = await api(url.replace(/\/$/, '') + '/.json');
+    return r.json();
+  }
+
+  // ---------- excel ----------
+  const MAXCELL = 32000;
+  function cellVal(v) {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'object') v = JSON.stringify(v);
+    if (typeof v === 'string' && v.length > MAXCELL) return v.slice(0, MAXCELL) + ' …[잘림: 원본 JSON 참고]';
+    return v;
+  }
+  function flatten(o, prefix = '', out = {}, depth = 0) {
+    for (const k in o) {
+      const v = o[k], key = prefix ? prefix + '.' + k : k;
+      if (v && typeof v === 'object' && !Array.isArray(v) && depth < 1) flatten(v, key, out, depth + 1);
+      else out[key] = cellVal(v);
+    }
+    return out;
+  }
+  function rowsToSheet(rows) {
+    const flat = rows.map((r) => flatten(r));
+    const cols = []; const seen = new Set();
+    flat.forEach((r) => Object.keys(r).forEach((k) => { if (!seen.has(k)) { seen.add(k); cols.push(k); } }));
+    const head = ['_id', '_path'].filter((c) => seen.has(c));
+    const order = [...head, ...cols.filter((c) => !head.includes(c))];
+    return XLSX.utils.json_to_sheet(flat, { header: order });
+  }
+  function sheetName(name, used) {
+    let base = name.replace(/[\\/?*\[\]:]/g, '_').slice(0, 28) || 'sheet';
+    let n = base, i = 2;
+    while (used.has(n.toLowerCase())) n = base.slice(0, 26) + '_' + i++;
+    used.add(n.toLowerCase()); return n;
+  }
+  function rtdbToRows(node) {
+    // object of objects -> rows with _key ; otherwise one row
+    if (node && typeof node === 'object' && !Array.isArray(node)) {
+      const vals = Object.values(node);
+      if (vals.length && vals.every((v) => v && typeof v === 'object')) return Object.entries(node).map(([k, v]) => ({ _id: k, ...v }));
+      return [node];
+    }
+    if (Array.isArray(node)) return node.map((v, i) => (v && typeof v === 'object' ? { _id: i, ...v } : { _id: i, value: v }));
+    return [{ value: node }];
+  }
+  function workbookToBlob(wb) {
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    return new Uint8Array(out);
+  }
+
+  // ---------- run ----------
+  let totalSteps = 1, doneSteps = 0;
+  function setProgress(inc = 0) { doneSteps += inc; $('bar').firstElementChild.style.width = Math.min(100, Math.round(doneSteps / totalSteps * 100)) + '%'; }
+  function logLine(msg, cls) {
+    const el = $('log'); el.style.display = 'block';
+    const line = document.createElement('div'); if (cls) line.className = cls; line.textContent = msg; el.appendChild(line); el.scrollTop = el.scrollHeight;
+  }
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const safe = (s) => String(s).replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
+
+  $('run').onclick = async () => {
+    const selProj = projects.filter((p) => $('projList').querySelector(`input[data-proj="${CSS.escape(p.id)}"]`)?.checked);
+    const selSheets = sheets.filter((s) => $('sheetList').querySelector(`input[data-sheet="${CSS.escape(s.id)}"]`)?.checked);
+    if (!selProj.length && !selSheets.length) { alert('백업할 대상을 선택하세요.'); return; }
+
+    // pick save location first (needs the click gesture)
+    const fname = `JNFAM_Backup_${today()}.zip`;
+    let handle = null;
+    if (window.showSaveFilePicker) {
+      try { handle = await showSaveFilePicker({ id: 'jnfam-backup', suggestedName: fname, types: [{ description: 'ZIP', accept: { 'application/zip': ['.zip'] } }] }); }
+      catch (e) { if (e.name === 'AbortError') return; handle = null; }
+    }
+
+    $('run').disabled = true; $('log').innerHTML = ''; $('bar').style.display = 'block';
+    totalSteps = selProj.length * 6 + selSheets.length + 1; doneSteps = 0; setProgress();
+    const zip = new JSZip();
+    const summary = []; const problems = [];
+    const started = new Date();
+    logLine(`백업 시작 ${started.toLocaleString()}`);
+
+    for (const p of selProj) {
+      logLine(`■ ${p.id}`);
+      const wb = XLSX.utils.book_new(); const used = new Set(); let any = false;
+      // Firestore
+      try {
+        const fs = await dumpFirestore(p.id, (m) => logLine(m));
+        if (fs) {
+          let docs = 0;
+          for (const [col, rows] of Object.entries(fs)) {
+            zip.file(`raw/${safe(p.id)}/firestore/${col.split('/').map(safe).join('/')}.json`, JSON.stringify(rows, null, 2));
+            if (rows.length) { XLSX.utils.book_append_sheet(wb, rowsToSheet(rows), sheetName(col.replace(/\//g, '.'), used)); any = true; }
+            docs += rows.length;
+          }
+          summary.push(`${p.id}  Firestore  컬렉션 ${Object.keys(fs).length}개, 문서 ${docs}건`);
+        } else logLine(`  Firestore 없음`);
+      } catch (e) { problems.push(`${p.id} Firestore: ${e.message}`); logLine(`  Firestore 오류: ${e.message}`, 'err'); }
+      setProgress(3);
+      // Realtime Database
+      try {
+        const urls = await rtdbUrls(p);
+        for (const url of urls) {
+          const data = await dumpRtdb(url);
+          const host = new URL(url).host.split('.')[0];
+          zip.file(`raw/${safe(p.id)}/rtdb_${safe(host)}.json`, JSON.stringify(data, null, 2));
+          let nodes = 0;
+          if (data && typeof data === 'object') {
+            for (const [k, v] of Object.entries(data)) {
+              const rows = rtdbToRows(v);
+              if (rows.length) { XLSX.utils.book_append_sheet(wb, rowsToSheet(rows), sheetName('rtdb.' + k, used)); any = true; nodes++; }
+            }
+          }
+          summary.push(`${p.id}  Realtime DB  ${host}: 최상위 노드 ${nodes}개`);
+          logLine(`  Realtime DB ${host}: 최상위 노드 ${nodes}개`, 'ok');
+        }
+      } catch (e) { problems.push(`${p.id} Realtime DB: ${e.message}`); logLine(`  Realtime DB 오류: ${e.message}`, 'err'); }
+      setProgress(3);
+      if (any) zip.file(`excel/${safe(p.id)}.xlsx`, workbookToBlob(wb));
+    }
+
+    for (const s of selSheets) {
+      try {
+        const r = await api(`https://www.googleapis.com/drive/v3/files/${s.id}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`);
+        zip.file(`google-sheets/${safe(s.name)}.xlsx`, await r.arrayBuffer());
+        summary.push(`구글 시트  ${s.name}`);
+        logLine(`■ 시트 ${s.name}`, 'ok');
+      } catch (e) { problems.push(`시트 ${s.name}: ${e.message}`); logLine(`■ 시트 ${s.name} 오류: ${e.message}`, 'err'); }
+      setProgress(1);
+    }
+
+    const readme = [
+      'JNFAM Data Backup',
+      `생성: ${started.toLocaleString()} / 계정: ${$('who').textContent}`,
+      '',
+      '구성',
+      '  excel/          Firebase 프로젝트별 엑셀 (시트 = 컬렉션 또는 최상위 노드)',
+      '  raw/            원본 JSON (엑셀 셀 길이 제한으로 잘린 값의 원본 포함)',
+      '  google-sheets/  선택한 구글 시트 사본',
+      '',
+      '내용', ...summary.map((l) => '  ' + l),
+      '', problems.length ? '오류' : '오류 없음', ...problems.map((l) => '  ' + l),
+      '', 'Business data in this backup belongs to JNF AM LLC.',
+      '© 2025–2026 Young Tai Kang. All rights reserved.'
+    ].join('\r\n');
+    zip.file('README.txt', readme);
+
+    logLine('ZIP 생성 중…');
+    try {
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+      if (handle) { const w = await handle.createWritable(); await w.write(blob); await w.close(); }
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+      setProgress(1);
+      logLine(`완료: ${fname} (${(blob.size / 1048576).toFixed(1)} MB)${problems.length ? ` · 오류 ${problems.length}건, README 참고` : ''}`, problems.length ? 'warn' : 'ok');
+    } catch (e) { logLine('저장 실패: ' + e.message, 'err'); }
+    $('run').disabled = false;
+  };
+})();
+</script>
+<div class="ytk-copyright">© 2025–2026 Young Tai Kang. All rights reserved. Unauthorized use, copying, modification, or distribution without the written permission of Young Tai Kang is prohibited.</div>
+</body>
+</html>
