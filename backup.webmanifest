@@ -1,0 +1,14 @@
+{
+  "name": "JNFAM Data Backup",
+  "short_name": "JNFAM 백업",
+  "start_url": "./backup.html",
+  "scope": "./backup.html",
+  "display": "standalone",
+  "background_color": "#f5f6fa",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "backup-icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "backup-icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "backup-icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
